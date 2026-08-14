@@ -20,14 +20,14 @@ description: 需要把文本（一段话、或一份带角色/语气标注的播
   export DOUBAO_API_KEY=xxx
   ```
 
-- Python 3.8+（脚本只用标准库，不需要额外装包）。
+- Node.js 18+（脚本只用内置的 `fetch`/`fs`/`crypto`，不依赖任何 npm 包——目标使用场景是各种 agent CLI 工具的运行环境，这些工具本身大多是 npm 生态分发的，比起 Python，Node 更可能已经装好）。
 
 ## 用法
 
 ### 单句试听
 
 ```bash
-python3 scripts/synthesize.py --text "你好，这是一段测试" \
+node scripts/synthesize.mjs --text "你好，这是一段测试" \
   --speaker zh_female_xiaohe_uranus_bigtts \
   --out /tmp/test.mp3
 ```
@@ -55,7 +55,7 @@ python3 scripts/synthesize.py --text "你好，这是一段测试" \
 - `tone` 是可选的自然语言语气指令，会作为 `context_texts` 传给 API（见下面"控制语气"一节），不写就是默认语气朗读。
 
 ```bash
-python3 scripts/synthesize.py --script script.json --out-dir ./audio
+node scripts/synthesize.mjs --script script.json --out-dir ./audio
 ```
 
 输出：
@@ -117,5 +117,5 @@ audio/
 ## 常见坑
 
 - **不要用老版本 TTS 接口**（`api/v1/tts` 或 `tts_middle_layer/tts`）——那是"语音合成1.0"的鉴权体系（appid/cluster/token），跟"语音合成2.0"的 API Key 不是一回事，混用会报 `Missing required: app.appid` 之类的错。
-- 响应是 chunked 流式的多个 JSON 对象拼在一起，**不能当单个 JSON 解析**，脚本里已经用 `raw_decode` 循环处理了，自己重写时注意这点。
+- 响应是 chunked 流式的多个 JSON 对象首尾相连、没有分隔符，**不能当单个 JSON 解析**，脚本里已经用逐字符扫描（跟踪字符串/转义状态和括号深度）的方式切分处理了，自己重写时注意这点。
 - 控制台默认展示的"预付费大额套餐"是企业采购套餐，日常测试切到"后付费"看"语音合成2.0"零售单价，别被大额套餐吓到。
