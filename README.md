@@ -7,13 +7,14 @@
 ## 三段流水线
 
 ```
-source.md ──[note-to-podcast-script]──▶ script.json ──[text-to-speech-doubao]──▶ audio/*.mp3 + manifest.json ──[podcast-deliver]──▶ episode.mp3 / RSS Feed / 飞书消息
+source.md ──[note-to-podcast-script]──▶ script.json ──[text-to-speech-doubao 或 text-to-speech-azure]──▶ audio/*.mp3 + manifest.json ──[podcast-deliver]──▶ episode.mp3 / RSS Feed / 飞书消息
 ```
 
 | Skill | 做什么 | 依赖 |
 |---|---|---|
 | `note-to-podcast-script` | 把源文档改写成播客对话脚本（策划大纲→写台词→自我质检三阶段），产出 `script.json` | 无外部依赖——执行 skill 的 agent 自己就是 LLM，直接照指令推理产出，不调用任何 LLM API |
-| `text-to-speech-doubao` | 把 `script.json` 批量合成成分段音频 | 火山引擎语音合成2.0 API Key（`DOUBAO_API_KEY`），纯 BYOK |
+| `text-to-speech-doubao` | 把 `script.json` 批量合成成分段音频，**推荐/默认路径** | 火山引擎语音合成2.0 API Key（`DOUBAO_API_KEY`），纯 BYOK |
+| `text-to-speech-azure` | 同上，命令行用法和输入输出格式跟豆包版本完全对齐，**免费试用路径**：没有语气/情绪控制、中文自然度弱于豆包、长期成本约为豆包的 200~300 倍，只用来先免费体验一遍完整流程 | 微软 Azure Speech 密钥+区域（`AZURE_SPEECH_KEY`/`AZURE_SPEECH_REGION`），每月 50 万字符免费额度 |
 | `podcast-deliver` | 把分段音频合并/发布/推送成最终交付物 | 按需：`ffmpeg`+`jq`（本地合并）、自建 `ob-podcast-backend` 兼容后端（RSS）、Hermes（飞书，个人环境专用，多数人跳过） |
 
 ## 为什么用文件系统做接口
@@ -28,6 +29,6 @@ source.md ──[note-to-podcast-script]──▶ script.json ──[text-to-spe
 
 全部 BYOK（Bring Your Own Key），不依赖任何托管账号：
 
-- 语音合成：自己的火山引擎账号，`export DOUBAO_API_KEY=xxx`
+- 语音合成：自己的火山引擎账号，`export DOUBAO_API_KEY=xxx`；或者先用 Azure 免费额度试用，`export AZURE_SPEECH_KEY=xxx AZURE_SPEECH_REGION=xxx`
 - 脚本生成：不需要单独的 LLM API Key——用执行 skill 的 agent 自带的模型能力
 - RSS 发布（可选）：自己部署 `ob-podcast-backend` 或等价服务，自己的 `PODCAST_BACKEND_API_KEY` / `FEED_TOKEN`
